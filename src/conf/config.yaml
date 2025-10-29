@@ -1,0 +1,6 @@
+name: "Wikipedia world leader scraper"
+api:
+  url: "https://country-leaders.onrender.com"
+cookie:
+  path: "./conf/cookie.json"
+  max_age: 30 # seconds
