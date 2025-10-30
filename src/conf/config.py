@@ -3,17 +3,11 @@ from dataclasses import dataclass
 
 @dataclass
 class ApiConfig:
-    url: str
-
-
-@dataclass
-class CookieConfig:
-    max_age: int  # in secondes
-    path: str
+    base_url: str
+    max_retry: int
 
 
 @dataclass
 class AppConfig:
     api: ApiConfig
-    cookie: CookieConfig
     name: str

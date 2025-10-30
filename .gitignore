@@ -13,3 +13,4 @@ venv
 
 # Hydra output
 outputs/
+.cache
