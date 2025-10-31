@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class ApiClient:
-    def __init__(self, base_url: str, max_retry: int):
+    def __init__(self, base_url: str, max_retry: int, user_agent: str):
         """
         Initialize the ApiClient.
 
@@ -22,15 +22,13 @@ class ApiClient:
         self.max_retry = max_retry
         self.session = requests.session()
         self._set_cookie()
+        self.__headers = {"User-Agent": user_agent}
 
     def _set_cookie(self) -> str:
         """Sends a request to that returns a cookie that is managed
         by our  `requests.Session` instance.
         That cookie can be used with the API on all subsequent requests.
         """
-        res = self.session.get(f"{self.base_url}/cookie/")
-        if res.status_code == 403:
-            self._set_cookie()
         res = self.session.get(f"{self.base_url}/cookie/")
         res.raise_for_status()
 
@@ -74,7 +72,9 @@ class ApiClient:
         """Gets a list of available country codes."""
 
         def api_call() -> requests.Response:
-            return self.session.get(f"{self.base_url}/countries")
+            return self.session.get(
+                f"{self.base_url}/countries", headers=self.__headers
+            )
 
         res = self._with_retry(
             callable_func=api_call,
@@ -89,6 +89,7 @@ class ApiClient:
             return self.session.get(
                 f"{self.base_url}/leaders",
                 params={"country": country},
+                headers=self.__headers,
             )
 
         res = self._with_retry(

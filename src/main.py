@@ -21,6 +21,7 @@ def main(cfg: AppConfig):
     api_client = ApiClient(
         base_url=cfg.api.base_url,
         max_retry=cfg.api.max_retry,
+        user_agent=cfg.api.user_agent,
     )
 
     cache = Cache()
@@ -33,8 +34,6 @@ def main(cfg: AppConfig):
             leaders: list[Leader] = api_client.get_leaders(country)
             cache.set_leaders(country, leaders)
         all_leaders.extend(leaders)
-
-
 
 
 if __name__ == "__main__":
