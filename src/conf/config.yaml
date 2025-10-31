@@ -2,3 +2,6 @@ name: "Wikipedia world leader scraper"
 api:
   base_url: "https://country-leaders.onrender.com"
   max_retry: 2
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+  min_scrape_delay: 0.1 # seconds
+  max_scrape_delay: 3 # seconds
