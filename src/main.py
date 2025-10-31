@@ -83,6 +83,8 @@ def main(cfg: AppConfig):
 
     consolidate_data(cache, all_leaders)
 
+    log.info(f"Stopping '{cfg.name}'!")
+
 
 if __name__ == "__main__":
     main()

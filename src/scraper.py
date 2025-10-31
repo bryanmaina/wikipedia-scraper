@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 import time
 from urllib.parse import urlparse
 
@@ -113,12 +114,58 @@ class WikiScraper:
             soup = BeautifulSoup(res.text, "html.parser")
             first_table = soup.find("table")
             if first_table:
-                target_paragraph = first_table.find_next("p")
+
+                def is_not_empty_p(tag):
+                    return tag.name == "p" and not (
+                        tag.has_attr("class") and "mw-empty-elt" in tag["class"]
+                    )
+
+                target_paragraph = first_table.find_next(is_not_empty_p)
                 if target_paragraph:
-                    clean_text = target_paragraph.get_text(separator="", strip=False)
+                    dirty_text = target_paragraph.get_text(separator="", strip=False)
+                    clean_text = self._clean_text(dirty_text)
+                    # log.debug(f"target_paragraph: {target_paragraph}")
+                    log.debug(f"dirty_text: {dirty_text}")
+                    log.debug(f"clean_text: {clean_text}")
                     return Leader(leader_id=leader["id"], content=clean_text)
         except Exception:
             log.exception(
                 f"Failed to get biography for {leader['first_name']} {leader['last_name']}"
             )
         return None
+
+    @staticmethod
+    def _clean_text(text: str) -> str:
+        """Removes bracketed references and pronunciations from a string."""
+
+        def clean_parentheses_content(match):
+            content = match.group(1)
+
+            # Remove bracketed single letters/numbers like [a], [1]
+            content = re.sub(r"\[[a-zA-Z0-9]]", "", content)
+
+            pronunciation_patterns = [
+                r"/[^/]+/",  # /.../
+                r"([a-zA-Z]+\s+)?pronunciation:\s*\[[^\]]+\]",  # French pronunciation: [...]
+                r"[a-zA-Z]+:\s*\[[^\]]+\]",  # French: [...]
+                r"van BYOO-rən",  # special case for van Buren
+                r"ⓘ",  # ⓘ symbol
+            ]
+            pronunciation_regex = "|".join(pronunciation_patterns)
+
+            content = re.sub(pronunciation_regex, "", content)
+
+            # Clean up extra spaces and semicolons at the beginning
+            content = content.strip()
+            while content.startswith(";") or content.startswith(" "):
+                content = content[1:].strip()
+
+            return f"({content})"
+
+        # First, remove all bracketed single letters/numbers from the whole text
+        text = re.sub(r"\[[a-zA-Z0-9]]", "", text)
+
+        # Then, process the content inside parentheses
+        text = re.sub(r"\((.*?)\)", clean_parentheses_content, text)
+
+        return text
