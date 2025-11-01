@@ -146,6 +146,9 @@ class WikiScraper:
         # Remove the 'ⓘ' symbol and any trailing comma/space
         text = re.sub(r"\s*ⓘ,?", "", text)
 
+        # Remove IPA patterns like /IPA/;
+        text = re.sub(r"/[^/]+/;", "", text)
+
         # Remove any content within square brackets (e.g., [pronunciation])
         # This is a global removal, assuming square brackets are primarily for pronunciations or citations (already removed).
         text = re.sub(r"\[[^]]+\]", "", text)
