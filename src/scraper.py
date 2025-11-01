@@ -137,35 +137,37 @@ class WikiScraper:
     @staticmethod
     def _clean_text(text: str) -> str:
         """Removes bracketed references and pronunciations from a string."""
+        # Remove bracketed citations (e.g., [1], [2])
+        text = re.sub(r"\[[^]]+\]", "", text)
 
-        def clean_parentheses_content(match):
-            content = match.group(1)
+        # Remove IPA and similar notations (e.g., /.../; )
+        text = re.sub(r"/[^/]+/[^;]+;", "", text)
 
-            # Remove bracketed single letters/numbers like [a], [1]
-            content = re.sub(r"\[[a-zA-Z0-9]]", "", content)
+        # Remove the 'ⓘ' symbol and any trailing comma/space
+        text = re.sub(r"\s*ⓘ,?", "", text)
 
-            pronunciation_patterns = [
-                r"/[^/]+/",  # /.../
-                r"([a-zA-Z]+\s+)?pronunciation:\s*\[[^\]]+\]",  # French pronunciation: [...]
-                r"[a-zA-Z]+:\s*\[[^\]]+\]",  # French: [...]
-                r"van BYOO-rən",  # special case for van Buren
-                r"ⓘ",  # ⓘ symbol
-            ]
-            pronunciation_regex = "|".join(pronunciation_patterns)
+        # Remove any content within square brackets (e.g., [pronunciation])
+        # This is a global removal, assuming square brackets are primarily for pronunciations or citations (already removed).
+        text = re.sub(r"\[[^]]+\]", "", text)
 
-            content = re.sub(pronunciation_regex, "", content)
+        # Remove patterns like "Language: " that might be left over from pronunciation removal
+        # This targets "Dutch: ", "French: ", etc., followed by optional punctuation and spaces.
+        # This is applied globally, but should primarily affect areas where pronunciations were.
+        text = re.sub(r"[A-Za-z]+(?: pronunciation)?:\s*[,;]?\s*", "", text)
 
-            # Clean up extra spaces and semicolons at the beginning
-            content = content.strip()
-            while content.startswith(";") or content.startswith(" "):
-                content = content[1:].strip()
-
-            return f"({content})"
-
-        # First, remove all bracketed single letters/numbers from the whole text
-        text = re.sub(r"\[[a-zA-Z0-9]]", "", text)
-
-        # Then, process the content inside parentheses
-        text = re.sub(r"\((.*?)\)", clean_parentheses_content, text)
-
+        # General cleanup for parentheses and whitespace
+        text = re.sub(r"\s+", " ", text).strip()  # Normalize whitespace
+        text = re.sub(r"\(\s*\)", "", text)  # Remove empty parentheses
+        text = re.sub(r"\s*([,.])", r"\1", text)  # Remove space before punctuation
+        text = re.sub(r"\(\s*", "(", text)  # Remove space after opening parenthesis
+        text = re.sub(r"\s*\)", ")", text)  # Remove space before closing parenthesis
+        text = re.sub(
+            r"\(,", "(", text
+        )  # Remove leading comma after opening parenthesis
+        text = re.sub(
+            r",\s*\)", ")", text
+        )  # Remove trailing comma before closing parenthesis
+        text = re.sub(
+            r";\s*\)", ")", text
+        )  # Remove trailing semicolon before closing parenthesis
         return text
